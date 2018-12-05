@@ -55,7 +55,6 @@ def dictMaker(traceBack, networkTrackDict, subNetworkTrackDict, pathwayTrackDict
 	return networkTrackDict, subNetworkTrackDict, pathwayTrackDict
 
 
-# Addition mechanism for tracking Gene Network Categories, SubNetworks, and Pathway Counts
 def addition(networkDict, subNetworkDict, pathwayDict, refDict, network, subNetwork, path, timepoint, tag, expression):
 	# Tracks total expression at this timepoint
 	expression += float(refDict[tag][timepoint])
