@@ -1,1 +1,0 @@
-Microarray_ID	Gene_name	Locus	5 min_b1t1	5 min_b1t2	5 min_b2t1	5 min_b2t2	15 min_b1t1	15 min_b1t2	15 min_b2t1	15 min_b2t2	30 min_b1t1	30 min_b2t1	60 min_b1t1	60 min_b1t2	60 min_b2t1	60 min_b2t2	Probe position	Description	Function	AUC
