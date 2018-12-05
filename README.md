@@ -21,7 +21,7 @@ Both are easily installed with conda
    ```bash
    $> cd Gene_Expression
    $> chmod 755 ./networkGraphing.py
-   $> networkGraphing.py -d fileList.txt
+   $> ./networkGraphing.py -d fileList.txt
    ```
    
 # Explanation
