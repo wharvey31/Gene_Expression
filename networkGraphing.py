@@ -5,7 +5,6 @@ import pandas as pd
 import json
 import math
 from matplotlib import pyplot as plt
-from matplotlib.legend import Legend
 
 parser = argparse.ArgumentParser() 
 
@@ -17,17 +16,13 @@ args = parser.parse_args()
 
 # Addition mechanism for tracking Overall Gene Network Categories (OGNC) and Pathway Counts
 def addition(networkDict, subNetworkDict, pathwayDict, refDict, network, subnet, pathway, timepoint, tag, organism):
+	expression = float(refDict[tag][timepoint])
 	if args.proportionalCount == 1:
 		if float(refDict[tag][timepoint]) > 0.0:
 			# Values are percentage of total genes expressed at every timepoint
 			networkDict[str(network)] += 1.0/float(totalGenes[organismList[organism]])
 			pathwayDict[str(pathway)] += 1.0/float(totalGenes[organismList[organism]])
 			subNetworkDict[str(subnet)] += 1.0/float(totalGenes[organismList[organism]])
-	elif args.proportionalCount == 2:
-			# Values are relative abundace across whole timepoint
-			networkDict[str(network)] += float(refDict[tag][timepoint])/float(genePerTime[organismList[organism]][str(timepoint)])
-			pathwayDict[str(pathway)] += float(refDict[tag][timepoint])/float(genePerTime[organismList[organism]][str(timepoint)])
-			subNetworkDict[str(subnet)] += float(refDict[tag][timepoint])/float(genePerTime[organismList[organism]][str(timepoint)])
 	else:
 		try:
 			networkDict[str(network)] += float(refDict[tag][timepoint])
@@ -37,10 +32,11 @@ def addition(networkDict, subNetworkDict, pathwayDict, refDict, network, subnet,
 			networkDict[str(network)] += 0.0
 			pathwayDict[str(pathway)] += 0.0
 			subNetworkDict[str(subnet)] += 0.0
+	return expression
 
 #Graphing function
 def displayGraphs(countDict = None, timepoint = 0, figSize = (10,6), labSize = 5, yPlotLabel = "Total Read Count",
-		 				xPlotLabel = "Pathway/Network", condensed_legend = False):
+		 				xPlotLabel = "Pathway/Network", condensed_legend = False, bottom_adj = None):
 	labelList = []
 	countList = []
 	finalDict = {}
@@ -65,11 +61,23 @@ def displayGraphs(countDict = None, timepoint = 0, figSize = (10,6), labSize = 5
 		ax = df.plot.bar(rot=0, style='ggplot',figsize=figSize)
 	plt.legend(bbox_to_anchor=(1., 1.), loc=2, borderaxespad=0., title="Organism")
 	ax.xaxis.set_tick_params(labelsize=labSize)
+	plt.subplots_adjust(bottom=bottom_adj)
 	plt.title("Resource Distribution at "+str(timepointList[timepoint]))
 	plt.ylabel(yPlotLabel)
 	plt.xlabel(xPlotLabel, labelpad=20)
 	plt.show()
 	
+
+def mergeDict(key, initDict, combDict, total):
+	if key in combDict:
+		combDict[key].append(float(initDict[key])/float(total))
+		if (float(combDict[key][0]) + float(combDict[key][1])) == 0:
+			del combDict[key]
+	else:
+		combDict[key] = [float(initDict[key])/(total)]
+	return combDict
+
+
 jsonFileList = []
 countFileList = []
 totalGenes = {}
@@ -86,12 +94,7 @@ networkTrackDict = {}
 subNetworkTrackDict = {}
 pathwayTrackDict = {}
 organismList = []
-found = 0
-not_found = 0
-
-networkList = []
 geneList = []
-
 tagDict = {}
 
 # Standard List of sampling times
@@ -136,10 +139,8 @@ for file in jsonFileList:
 				networkLabel.pop()
 				networkLabel = "\n".join(networkLabel)
 			if str(networkLabel) in networkTrackDict:
-				found += 1
 				pass
 			else:
-				not_found += 1
 				networkTrackDict[str(networkLabel)] = []
 			for k in range(len(networks[j]['children'])):
 				# Adds dictionary which adds pathways to Networks
@@ -199,16 +200,6 @@ for file in jsonFileList:
 
 # Removes Brite Hierarchies categories (redundant/uninformative)
 networkTrackDict.pop('Brite\nHierarchies',None)
-total_genes = 0
-
-# Total gene counts for use in proportional count based off timepoint
-genePerTime = {}
-for i in range(len(organismList)):
-	genePerTime[organismList[i]] = {}
-	for time in range(minTimepoints):
-		genePerTime[organismList[i]][str(time)] = 0.0
-		for gene in geneList[i]:
-			genePerTime[organismList[i]][str(time)] += float(tagDict[gene][time])
 
 # Total gene counts based off of total expression profile
 totalGenes = {}
@@ -217,12 +208,13 @@ for i in range(len(organismList)):
 
 # Cycles through timepoints and organisms to add counts per pathway
 for timepoint in range(0,minTimepoints):
-	organismTracker = 0
 	combinedNetworkDict = {}
 	combinedPathwayDict = {}
 	combinedSubNetworkDict = {}
+	organismTracker = 0
 	for organism in geneList:
-		# Sets counts to 0 for all categories along each timpeoint
+		expression_total = 0
+		# Sets counts to 0 for all categories along each timepoint
 		pathwayCountDict = {}
 		networkCountDict = {}
 		subNetworkCountDict = {}
@@ -242,42 +234,28 @@ for timepoint in range(0,minTimepoints):
 						if str(path) in subNetworkTrackDict[subNetwork]:
 							for network in networkTrackDict:
 								if str(subNetwork) in networkTrackDict[str(network)]:
-									# Sends OGNC name, pathway name, timpoint, and gene locus to addition function
-									addition(networkCountDict, subNetworkCountDict, pathwayCountDict, tagDict, str(network), str(subNetwork), str(path), timepoint, locus, organismTracker)
+									# Sends OGNC name, pathway name, timpoint, and gene locus to addition function									
+									expression_total += addition(networkCountDict, subNetworkCountDict, pathwayCountDict, tagDict, str(network), str(subNetwork), str(path), timepoint, locus, organismTracker)
 		# Adds counts to a shared dictionary with values being n-dimensional lists
-		for key in pathwayCountDict:
-			if key in combinedPathwayDict:
-				combinedPathwayDict[key].append(pathwayCountDict[key])
-				if (float(combinedPathwayDict[key][0]) + float(combinedPathwayDict[key][1])) == 0:
-					del combinedPathwayDict[key]
-			else:
-				combinedPathwayDict[key] = [pathwayCountDict[key]]
+		# Adds counts to a shared dictionary with values being n-dimensional lists
 		for key in networkCountDict:
-			if key in combinedNetworkDict:
-				combinedNetworkDict[key].append(networkCountDict[key])
-				if (float(combinedNetworkDict[key][0]) + float(combinedNetworkDict[key][1])) == 0:
-					del combinedNetworkDict[key]
-			else:
-				combinedNetworkDict[key] = [networkCountDict[key]]
+			combinedNetworkDict = mergeDict(key, networkCountDict, combinedNetworkDict, expression_total)
 		for key in subNetworkCountDict:
-			if key in combinedSubNetworkDict:
-				combinedSubNetworkDict[key].append(subNetworkCountDict[key])
-				if (float(combinedSubNetworkDict[key][0]) + float(combinedSubNetworkDict[key][1])) == 0:
-					del combinedSubNetworkDict[key]
-			else:
-				combinedSubNetworkDict[key] = [subNetworkCountDict[key]]
+			combinedSubNetworkDict = mergeDict(key, subNetworkCountDict, combinedSubNetworkDict, expression_total)
+		for key in pathwayCountDict:
+			combinedPathwayDict = mergeDict(key, pathwayCountDict, combinedPathwayDict, expression_total)
 		organismTracker += 1
 	# graphing function for networks only
 	if args.graphmode == 1:
 		displayGraphs(countDict=combinedNetworkDict, timepoint=timepoint, figSize=(10,6))
 	# graphing function for pathways only
 	elif args.graphmode == 2:
-		displayGraphs(countDict=combinedPathwayDict, timepoint=timepoint, figSize=(15,6), condensed_legend=True)
+		displayGraphs(countDict=combinedPathwayDict, timepoint=timepoint, figSize=(15,6), condensed_legend=True, bottom_adj=0.37)
 	# graphing function for subnetworks only
 	elif args.graphmode == 3:
-		displayGraphs(countDict=combinedSubNetworkDict, timepoint=timepoint, figSize=(15,6), condensed_legend=True)
+		displayGraphs(countDict=combinedSubNetworkDict, timepoint=timepoint, figSize=(15,6), condensed_legend=True, bottom_adj=0.31)
 	# graphing function for networks, subnetworks, and pathways (default)
 	else:
 		displayGraphs(countDict=combinedNetworkDict, timepoint=timepoint, figSize=(10,6))
-		displayGraphs(countDict=combinedSubNetworkDict, timepoint=timepoint, figSize=(15,6), condensed_legend=True)
-		displayGraphs(countDict=combinedPathwayDict, timepoint=timepoint, figSize=(15,6), condensed_legend=True)
+		displayGraphs(countDict=combinedSubNetworkDict, timepoint=timepoint, figSize=(15,6), condensed_legend=True, bottom_adj=0.31)
+		displayGraphs(countDict=combinedPathwayDict, timepoint=timepoint, figSize=(15,6), condensed_legend=True, bottom_adj=0.37)
