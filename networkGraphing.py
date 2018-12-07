@@ -138,11 +138,9 @@ def all_keys(search_dict, key_id):
 
 # Final function to check if a given dictionary contains values for at least one KEGG category
 def cleanDict(checkDict):
-	for key in checkDict:
-		if sum(checkDict[key]) != 0.0:
-			pass
-		else:
-			del checkDict[key]
+	for i in checkDict.keys():
+		if float(sum(checkDict[i])) == 0.0:
+			del checkDict[i]
 	return checkDict
 
 # Creates lists to hold the respective json and count files along with additional basic information
