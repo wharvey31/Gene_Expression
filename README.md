@@ -5,7 +5,9 @@ Example code to compare relative gene or protein level expression of multiple or
 # Python Requirements
 
 Python Version 2.7+. Currently does not work with Python 3
+
 Pandas: https://pandas.pydata.org/
+
 Matplotlib: https://matplotlib.org/
 
 Both are easily installed with conda
@@ -21,7 +23,7 @@ Both are easily installed with conda
    ```bash
    $> cd Gene_Expression
    $> chmod 755 ./networkGraphing.py
-   $> networkGraphing.py -d fileList.txt
+   $> ./networkGraphing.py -d fileList.txt
    ```
    
 # Explanation
