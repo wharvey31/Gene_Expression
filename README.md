@@ -30,3 +30,4 @@ Both are easily installed with conda
 
 fileList.txt contains a multi-line tab separated file where the first column contains the path to the KEGG pathway map and the second column contains a count matrix.
 
+networkGraphing_hardCode.py contains the same requirements and run conditions, but the JSON tree is traversed manually. This is included as an option to increase runtime, but does not affect end results.
