@@ -26,7 +26,7 @@ Both are easily installed with conda
    $> ./networkGraphing.py -d fileList.txt
    ```
    
-# Explanation
+## Explanation
 
 fileList.txt contains a multi-line tab separated file where the first column contains the path to the KEGG pathway map and the second column contains a count matrix.
 
