@@ -75,7 +75,7 @@ def addition(networkDict, subNetworkDict, pathwayDict, refDict, network, subNetw
 
 #Graphing function
 def displayGraphs(countDict = None, timepoint = 0, figSize = (10,6), labSize = 5, yPlotLabel = "Relative Read Distribution as Percent of Total",
-						xPlotLabel = "Pathway", rotate_legend = False, bottom_adj = None):
+						xPlotLabel = "Pathway", rotate_legend = False, bottom_adj = None, save=''):
 	labelList = []
 	countList = []
 	finalDict = {}
@@ -105,7 +105,7 @@ def displayGraphs(countDict = None, timepoint = 0, figSize = (10,6), labSize = 5
 	plt.title("Resource Distribution at "+str(timepointList[timepoint]))
 	plt.ylabel(yPlotLabel)
 	plt.xlabel(xPlotLabel, labelpad=20)
-	plt.show()
+	plt.savefig(save+'_'+str(timepoint+1)+'.png')
 	
 # Recursive method for searching through pathway map given dictionary generated from JSON and an NCBI locus ID
 def all_keys(search_dict, key_id):
@@ -138,7 +138,7 @@ def all_keys(search_dict, key_id):
 
 # Final function to check if a given dictionary contains values for at least one KEGG category
 def cleanDict(checkDict):
-	for i in checkDict.keys():
+	for i in list(checkDict.keys()):
 		if float(sum(checkDict[i])) == 0.0:
 			del checkDict[i]
 	return checkDict
@@ -204,7 +204,7 @@ subNetworkTrackDict = {}
 pathwayTrackDict = {}
 
 for organism in range(len(geneList)):
-	print "Establishing pathway map for "+str(organismList[organism])+". . ."
+	print("Establishing pathway map for "+str(organismList[organism])+". . .")
 	for locus in geneList[organism]:
 		# Calls recursive function to connect genes to pathways, etc.
 		traceBack = all_keys(data[organism], locus)
@@ -259,25 +259,25 @@ for timepoint in range(minTimepoints):
 			combinedPathwayDict[key][organism] = pathwayCountDict[key]/expression_total
 	# graphing function for networks only
 	if args.graphmode == 1:
-		print "Cleaning graph output for "+str(timepointList[timepoint]+". . .")
+		print("Cleaning graph output for "+str(timepointList[timepoint]+". . ."))
 		combinedNetworkDict = cleanDict(combinedNetworkDict)
 		displayGraphs(countDict=combinedNetworkDict, timepoint=timepoint, figSize=(10,6))
 	# graphing function for subnetworks only
 	elif args.graphmode == 2:
-		print "Cleaning graph output for "+str(timepointList[timepoint]+". . .")
+		print("Cleaning graph output for "+str(timepointList[timepoint]+". . ."))
 		combinedSubNetworkDict = cleanDict(combinedSubNetworkDict)
 		displayGraphs(countDict=combinedSubNetworkDict, timepoint=timepoint, figSize=(15,6), rotate_legend=True, bottom_adj=0.31)
 	# graphing function for pathways only
 	elif args.graphmode == 3:
-		print "Cleaning graph output for "+str(timepointList[timepoint]+". . .")
+		print("Cleaning graph output for "+str(timepointList[timepoint]+". . ."))
 		combinedPathwayDict  = cleanDict(combinedPathwayDict)
 		displayGraphs(countDict=combinedPathwayDict, timepoint=timepoint, figSize=(15,6), rotate_legend=True, bottom_adj=0.40)
 	# graphing function for networks, subnetworks, and pathways (default)
 	else:
-		print "Cleaning graph output for "+str(timepointList[timepoint]+". . .")
+		print("Cleaning graph output for "+str(timepointList[timepoint]+". . ."))
 		combinedNetworkDict = cleanDict(combinedNetworkDict)
-		displayGraphs(countDict=combinedNetworkDict, timepoint=timepoint, figSize=(10,6))
+		displayGraphs(countDict=combinedNetworkDict, timepoint=timepoint, figSize=(10,6), save='Network')
 		combinedSubNetworkDict = cleanDict(combinedSubNetworkDict)
-		displayGraphs(countDict=combinedSubNetworkDict, timepoint=timepoint, figSize=(15,6), rotate_legend=True, bottom_adj=0.31)
+		displayGraphs(countDict=combinedSubNetworkDict, timepoint=timepoint, figSize=(15,6), rotate_legend=True, bottom_adj=0.31, save='SubNetwork')
 		combinedPathwayDict  = cleanDict(combinedPathwayDict)
-		displayGraphs(countDict=combinedPathwayDict, timepoint=timepoint, figSize=(15,6), rotate_legend=True, bottom_adj=0.40)
+		displayGraphs(countDict=combinedPathwayDict, timepoint=timepoint, figSize=(15,6), rotate_legend=True, bottom_adj=0.40, save='Pathway')

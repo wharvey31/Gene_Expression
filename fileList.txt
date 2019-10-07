@@ -1,2 +1,2 @@
-./01.BAV1/deb00001.json	./01.BAV1/Trans.counts.ordered.txt
-./02.Ecoli/eco00001.json	./02.Ecoli/Ecoli.trans.counts.ordered.txt
+01.BAV1/deb00001.json	01.BAV1/Trans.counts.ordered.txt
+02.Ecoli/ebr00001.json	02.Ecoli/Ecoli.trans.counts.ordered.txt
